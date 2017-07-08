@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Train Schedule</title>
+	<meta charset="utf-8">
+	<link rel="stylesheet" type="text/css" href="assets/css/main.css">
+	<!-- Bootstrap: Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<!-- Bootstrap: Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+</head>
+
+<body>
+<!-- Bootstrap container -->
+<div class="container">
+	<!-- header -->
+	<div class="jumbotron">
+  	<h1>Train Schedule</h1>
+	</div>
+	<!-- end header -->
+	<div class="panel panel-default">
+	<div class="panel-heading">Current Train Schedule</div>
+	<table class="table table-striped">
+		<thead>
+			<tr>
+			<th>Train Name</th>
+			<th>Destination</th>
+			<th>Frequency (min)</th>
+			<th>Next Arrival</th>
+			<th>Minutes Away</th>
+			</tr>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+</div>
+
+<div class="panel panel-default">
+<div class="panel-heading">Add Train</div>
+<div class="panel-body">
+	<label for="basic-url">Train Name</label>
+	<input type="text" class="form-control" id="trainName">
+	<label for="basic-url">Destination</label>
+	<input type="text" class="form-control" id="destination">
+	<label for="basic-url">Frequency</label>
+	<input type="text" class="form-control" id="frequency">
+	<label for="basic-url">First Train Time (HH:mm - military time)</label>
+	<input type="text" class="form-control" id="firstTrain">
+	<br>
+	<input type="submit" class="btn btn-primary" id="submit" value="add train">
+<!-- end Bootstrap container -->
+
+<!-- begin jquery -->
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous">
+</script>
+<!-- end jquery -->
+
+<!-- moment js -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.js">
+</script>
+<!-- end moment js -->
+
+<!-- begin firebase -->
+<script src="https://www.gstatic.com/firebasejs/3.7.1/firebase.js"></script>
+<script>
+ 	// Initialize Firebase
+  <script src="https://www.gstatic.com/firebasejs/3.7.3/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyConoRtzp2DdTEHNGpeW00rac77erqHbNk",
+    authDomain: "first-firebase-898cf.firebaseapp.com",
+    databaseURL: "https://first-firebase-898cf.firebaseio.com",
+    storageBucket: "first-firebase-898cf.appspot.com",
+    messagingSenderId: "180128839396"
+  };
+  firebase.initializeApp(config);
+	// created variable to reference the database + variables
+	var $trainName, $destination, $frequency, $firstTrain, freq;
+	var database = firebase.database();
+	  $("#submit").on("click", function(event) {
+		event.preventDefault();
+		trainName = $("#trainName").val().trim();
+		destination = $("#destination").val().trim();
+		firstTrain = $("#firstTrain").val().trim();
+		freq = parseInt($("#frequency").val().trim());
+		database.ref().push({
+			trainName: trainName,
+			destination: destination,
+			firstTrain: firstTrain,
+			freq: freq
+		});
+		// clear inputs
+		$("#trainName").val("");
+		$("#destination").val("");
+		$("#freq").val("");
+		$("#firstTrain").val("");	
+	});
+	var snapshot = database.ref().on("child_added", function(snapshot) {
+	
+		var trainName = snapshot.val().trainName;
+		var destination = snapshot.val().destination;
+		var frequency = snapshot.val().frequency;
+		var firstTrain = snapshot.val().firstTrain;
+		cycle = snapshot.val().cycle;
+		var mfirstTrain = moment(firstTrain, "HH:mm");
+        var difference = moment().diff((mfirstTrain), "minutes");
+        var remainder = difference % freq;
+        var minAway = freq - remainder;
+        var next = moment().add(minAway, "minutes").format("LT");
+		var myArr = [trainName, destination, frequency, firstTrain, minAway];
+		var tr = $("<tr>");
+        for (var data of myArr) {
+            var td = $("<td>");
+            td.text(data);
+            tr.append(td);	
+        }
+				
+		$("tbody").append(tr);
+	}, function(errorObject) {
+		console.log("Errors: " + errorObject.code);
+	});	
+</script>
+
+<script type="text/javascript" src="assets/js/main.js"></script>
+</body>
+</html>
